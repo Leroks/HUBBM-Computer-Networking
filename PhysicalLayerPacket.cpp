@@ -8,6 +8,7 @@ PhysicalLayerPacket::PhysicalLayerPacket(int _layer_ID, const string& _sender_MA
 
 void PhysicalLayerPacket::print() {
     // TODO: Override the virtual print function from Packet class to additionally print layer-specific properties.
+    std::cout << "Sender MAC address: " << sender_MAC_address << ", Receiver MAC address: " << receiver_MAC_address << std::endl;
 }
 
 PhysicalLayerPacket::~PhysicalLayerPacket() {

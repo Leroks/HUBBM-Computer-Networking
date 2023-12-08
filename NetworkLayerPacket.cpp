@@ -1,5 +1,6 @@
 #include "NetworkLayerPacket.h"
 #include <iostream>
+using namespace std;
 
 NetworkLayerPacket::NetworkLayerPacket(int _layer_ID, const string &_sender_IP, const string &_receiver_IP)
         : Packet(_layer_ID) {
@@ -9,6 +10,7 @@ NetworkLayerPacket::NetworkLayerPacket(int _layer_ID, const string &_sender_IP, 
 
 void NetworkLayerPacket::print() {
     // TODO: Override the virtual print function from Packet class to additionally print layer-specific properties.
+    cout << "Sender IP address: " << sender_IP_address << ", Receiver IP address: " << receiver_IP_address << endl;
 }
 
 NetworkLayerPacket::~NetworkLayerPacket() {

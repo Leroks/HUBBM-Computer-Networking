@@ -10,9 +10,9 @@ class PhysicalLayerPacket : public Packet {
 public:
     PhysicalLayerPacket(int layerID, const string& senderMAC, const string& receiverMAC);
     ~PhysicalLayerPacket() override;
-
     string sender_MAC_address;
     string receiver_MAC_address;
+    int hopNumbers = 0;
 
     void print() override;
 };
