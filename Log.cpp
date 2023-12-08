@@ -19,3 +19,25 @@ Log::Log(const string &_timestamp, const string &_message, int _number_of_frames
 Log::~Log() {
     // TODO: Free any dynamically allocated memory if necessary.
 }
+void Log::print() {
+    const char* activityTypes[] = {
+            "Message Received",
+            "Message Forwarded",
+            "Message Sent",
+            "Message Dropped"
+    };
+
+    cout << "Activity: " << activityTypes[static_cast<int>(activity_type)] << endl;
+    cout << "Timestamp: " << timestamp << endl;
+    cout << "Number of frames: " << number_of_frames << endl;
+    cout << "Number of hops: " << number_of_hops << endl;
+    cout << "Sender ID: " << sender_id << endl;
+    cout << "Receiver ID: " << receiver_id << endl;
+
+    string success = success_status ? "Yes" : "No";
+    cout << "Success: " << success << endl;
+
+    if (!message_content.empty()) {
+        cout << "Message: \"" << message_content << "\"" << endl;
+    }
+}
