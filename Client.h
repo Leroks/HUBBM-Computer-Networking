@@ -32,6 +32,8 @@ public:
     queue<stack<Packet*>> outgoing_queue;
 
     friend ostream &operator<<(ostream &os, const Client &client);
+
+    void clearQueue(queue<stack<Packet *>> &q);
 };
 
 
