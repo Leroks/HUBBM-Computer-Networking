@@ -15,7 +15,18 @@ ostream &operator<<(ostream &os, const Client &client) {
        << client.client_mac << endl;
     return os;
 }
-
 Client::~Client() {
-    // TODO: Free any dynamically allocated memory if necessary.
+    clearQueue(incoming_queue);
+    clearQueue(outgoing_queue);
+}
+
+void Client::clearQueue(queue<stack<Packet*>>& q) {
+    while (!q.empty()) {
+        stack<Packet*>& tmp = q.front();
+        while (!tmp.empty()) {
+            delete tmp.top();
+            tmp.pop();
+        }
+        q.pop();
+    }
 }
