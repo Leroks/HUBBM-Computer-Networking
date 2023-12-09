@@ -175,26 +175,31 @@ void Network::showFrameInfo(string infoId, string outIn, int frameNo, vector<Cli
 
     Client *client = find_client(infoId, clients);
     string data;
-    std::queue<std::stack<Packet *>> temp;
+    std::queue<std::stack<Packet *>> queue;
 
-    if (outIn == "out") {
-        temp = client->outgoing_queue;
-    } else {
-        temp = client->incoming_queue;
+    if(queue.empty()) {
+        //cout << "The queue is empty" << endl;
     }
 
-    if (frameNo > temp.size()) {
+    if (outIn == "out") {
+        data += "";
+        queue = client->outgoing_queue;
+    } else {
+        queue = client->incoming_queue;
+    }
+
+    if (frameNo > queue.size()) {
         cout << "No such frame." << endl;
         return;
     }
 
     for (int i = 0; i + 1 < frameNo; i++) {
         i++;
-        temp.pop();
+        queue.pop();
         i--;
     }
 
-    std::stack<Packet *> frame = temp.front();
+    std::stack<Packet *> frame = queue.front();
 
     if (outIn == "out") {
         cout << "Current Frame #" << frameNo << " on the outgoing queue of client " << infoId << endl;
@@ -307,8 +312,7 @@ void Network::send(vector<Client> &clients) {
             number += 2;
             stack<Packet *> frame = queue.front();
             auto *pPhysicalLayerPacket = dynamic_cast<PhysicalLayerPacket *>(frame.top());
-            if(pPhysicalLayerPacket == nullptr) {
-            }
+            if(pPhysicalLayerPacket != nullptr) {}
             pPhysicalLayerPacket->hopNumbers++;
             frame.pop();
             frame.pop();
@@ -426,9 +430,15 @@ void Network::receive(std::vector<Client> &clients) {
                 std::tm *timestamp = std::localtime(&currentTime);
                 int adder = 0;
                 std::ostringstream oss;
-
+                if(oss.fail()) {
+                    cout << "The ostringstream() function failed" << endl;
+                }
                 oss << std::put_time(timestamp, "%Y-%m-%d %H:%M:%S");
                 std::string timestampString = oss.str();
+
+                if(timestampString.empty()) {
+                    //cout << "The string is empty" << endl;
+                }
 
                 Log log(timestampString, message, number+adder, pPhysicalLayerPacket->hopNumbers,
                         pApplicationLayerPacket->sender_ID, pApplicationLayerPacket->receiver_ID,
