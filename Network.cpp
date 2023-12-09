@@ -33,7 +33,7 @@ int Network::find_frame_size(string message, int message_limit) {
     return size;
 }
 
-Client *Network::find_client(string id, vector<Client> &clients) {
+Client *Network::findClient(string id, vector<Client> &clients) {
     for (auto &client: clients) {
         if (client.client_id == id) {
             return const_cast<Client *>(&client);
@@ -42,9 +42,9 @@ Client *Network::find_client(string id, vector<Client> &clients) {
     return nullptr;
 }
 
-Client *Network::find_client_MAC(string mac, vector<Client> &clients) {
+Client *Network::findClientMac(string MAC, vector<Client> &clients) {
     for (auto &client: clients) {
-        if (client.client_mac == mac) {
+        if (client.client_mac == MAC) {
             return const_cast<Client *>(&client);
         }
     }
@@ -52,7 +52,7 @@ Client *Network::find_client_MAC(string mac, vector<Client> &clients) {
 }
 
 string Network::find_MAC(string id, vector<Client> &clients) {
-    const Client *client = find_client(id, clients);
+    const Client *client = findClient(id, clients);
     if (client) {
         return client->client_mac;
     } else {
@@ -102,8 +102,8 @@ void Network::putToQueue(string sender_id, string receiver_id,
     int frame_size;
     frame_size = find_frame_size(message, message_limit);
 
-    Client *receiver = find_client(receiver_id, clients);
-    Client *client = find_client(sender_id, clients);
+    Client *receiver = findClient(receiver_id, clients);
+    Client *client = findClient(sender_id, clients);
 
     cout << "Message to be sent: \"" << message << "\"" << endl << endl;
 
@@ -177,7 +177,7 @@ void Network::putToQueue(string sender_id, string receiver_id,
 void Network::showFrameInfo(string infoId, string outIn, int frameNo, vector<Client> &clients) {
 
     string data;
-    Client *client = find_client(infoId, clients);
+    Client *client = findClient(infoId, clients);
     std::queue<std::stack<Packet *>> queue;
 
     if(queue.empty()) {
@@ -261,7 +261,10 @@ void Network::showFrameInfo(string infoId, string outIn, int frameNo, vector<Cli
 }
 
 void Network::queueInfo(string infoId, string outIn, vector<Client> &clients) {
-    Client *client = find_client(infoId, clients);
+    if(clients.empty()) {
+        cout << "The vector is empty" << endl;
+    }
+    Client *client = findClient(infoId, clients);
     std::queue<std::stack<Packet *>> queue;
 
     if (outIn == "out") {
@@ -345,7 +348,7 @@ void Network::receive(std::vector<Client> &clients) {
                     cout << "The string is empty" << endl;
                 }
                 std::cout << "Client " << client->client_id << " receiving frame #" << number << " from client "
-                          << find_client_MAC(pPhysicalLayerPacket->sender_MAC_address, clients)->client_id
+                          << findClientMac(pPhysicalLayerPacket->sender_MAC_address, clients)->client_id
                           << ", originating from client " << pApplicationLayerPacket->sender_ID << std::endl;
                 if(queue.front().empty()) {
                     number+=add;
@@ -354,7 +357,7 @@ void Network::receive(std::vector<Client> &clients) {
                 del = true;
             } else if (client->routing_table.count(client->routing_table[pApplicationLayerPacket->receiver_ID]) == 0) {
                 std::cout << "Client " << client->client_id << " receiving frame #" << number << " from client "
-                          << find_client_MAC(pPhysicalLayerPacket->sender_MAC_address, clients)->client_id
+                          << findClientMac(pPhysicalLayerPacket->sender_MAC_address, clients)->client_id
                           << ", but intended for client " << pApplicationLayerPacket->receiver_ID << ". Forwarding... "
                           << std::endl;
                 std::cout << "Error: Unreachable destination. Packets are dropped after "
@@ -366,7 +369,7 @@ void Network::receive(std::vector<Client> &clients) {
             } else {
                 if (number == 1) {
                     std::cout << "Client " << client->client_id << " receiving a message from client "
-                              << find_client_MAC(pPhysicalLayerPacket->sender_MAC_address, clients)->client_id
+                              << findClientMac(pPhysicalLayerPacket->sender_MAC_address, clients)->client_id
                               << ", but intended for client " << pApplicationLayerPacket->receiver_ID
                               << ". Forwarding... "
                               << std::endl;
@@ -374,7 +377,7 @@ void Network::receive(std::vector<Client> &clients) {
 
                 pPhysicalLayerPacket->sender_MAC_address = client->client_mac;
                 pPhysicalLayerPacket->receiver_MAC_address =
-                        find_client(client->routing_table[pApplicationLayerPacket->receiver_ID], clients)->client_mac;
+                        findClient(client->routing_table[pApplicationLayerPacket->receiver_ID], clients)->client_mac;
 
                 std::cout << "Frame #" << number << " MAC address change: New sender MAC "
                           << pPhysicalLayerPacket->sender_MAC_address
@@ -478,10 +481,10 @@ void Network::send(vector<Client> &clients) {
             frame.pop();
             number--;
             auto *pApplicationLayerPacket = dynamic_cast<ApplicationLayerPacket *>(frame.top());
-            cout << "Client " << find_client_MAC(pPhysicalLayerPacket->sender_MAC_address, clients)->client_id
+            cout << "Client " << findClientMac(pPhysicalLayerPacket->sender_MAC_address, clients)->client_id
                  << " sending frame #"
                  << number << " to client "
-                 << find_client_MAC(pPhysicalLayerPacket->receiver_MAC_address, clients)->client_id << endl;
+                 << findClientMac(pPhysicalLayerPacket->receiver_MAC_address, clients)->client_id << endl;
             if(queue.front().empty()) {
                 number*=multiplier;
             }
@@ -500,7 +503,7 @@ void Network::send(vector<Client> &clients) {
                      << " hops!" << endl;
                 number = 0;
             }
-            find_client(to_go, clients)->incoming_queue.push(queue.front());
+            findClient(to_go, clients)->incoming_queue.push(queue.front());
             client->outgoing_queue.pop();
             queue = client->outgoing_queue;
         }
@@ -509,7 +512,7 @@ void Network::send(vector<Client> &clients) {
 
 
 void Network::printLog(string logId, vector<Client> &clients) {
-    Client *client = find_client(logId, clients);
+    Client *client = findClient(logId, clients);
 
     std::vector<Log> &logs = client->log_entries;
 
