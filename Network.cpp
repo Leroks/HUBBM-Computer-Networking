@@ -112,34 +112,42 @@ void Network::putToQueue(string sender_id, string receiver_id,
         int adder = 0;
         number++;
 
-        // Message to be added
         string data = message.substr(i * message_limit, message_limit);
 
-        // Add it to the queue
         stack<Packet *> outQueue;
         outQueue.push(new ApplicationLayerPacket(0, sender_id, receiver_id, data));
         outQueue.push(new TransportLayerPacket(1, sender_port, receiver_port));
         outQueue.push(new NetworkLayerPacket(2, client->client_ip, receiver->client_ip));
         string findMac = find_MAC(client->routing_table[receiver_id], clients);
         outQueue.push(new PhysicalLayerPacket(3, client->client_mac, findMac));
+        adder*=multiplier;
         client->outgoing_queue.push(outQueue);
 
-        cout << "Frame #" << number << endl;
+        cout << "Frame #" << number*multiplier << endl;
         print_frame(outQueue);
     }
 
     time_t currentTime = time(nullptr);
+    if(currentTime == -1) {
+        cout << "The time() function failed" << endl;
+    }
     tm *timestamp = localtime(&currentTime);
+    if(timestamp == nullptr) {
+        cout << "The localtime() function failed" << endl;
+    }
     ActivityType type = ActivityType::MESSAGE_SENT;
     ostringstream oss;
 
     oss << put_time(timestamp, "%Y-%m-%d %H:%M:%S");
+    if(oss.fail()) {
+        cout << "The put_time() function failed" << endl;
+    }
     string timestampString = oss.str();
     Log log(timestampString, message, number, 0, sender_id, receiver_id, true, type);
     client->log_entries.push_back(log);
 }
 
-void Network::showFrameInfo(string infoId, string outIn, int frame_no, vector<Client> &clients) {
+void Network::showFrameInfo(string infoId, string outIn, int frameNo, vector<Client> &clients) {
 
     Client *client = find_client(infoId, clients);
     string data;
@@ -151,12 +159,12 @@ void Network::showFrameInfo(string infoId, string outIn, int frame_no, vector<Cl
         temp = client->incoming_queue;
     }
 
-    if (frame_no > temp.size()) {
+    if (frameNo > temp.size()) {
         cout << "No such frame." << endl;
         return;
     }
 
-    for (int i = 0; i + 1 < frame_no; i++) {
+    for (int i = 0; i + 1 < frameNo; i++) {
         i++;
         temp.pop();
         i--;
@@ -165,9 +173,9 @@ void Network::showFrameInfo(string infoId, string outIn, int frame_no, vector<Cl
     std::stack<Packet *> frame = temp.front();
 
     if (outIn == "out") {
-        cout << "Current Frame #" << frame_no << " on the outgoing queue of client " << infoId << endl;
+        cout << "Current Frame #" << frameNo << " on the outgoing queue of client " << infoId << endl;
     } else {
-        cout << "Current Frame #" << frame_no << " on the incoming queue of client " << infoId << endl;
+        cout << "Current Frame #" << frameNo << " on the incoming queue of client " << infoId << endl;
     }
 
     auto *pPhysicalLayerPacket = dynamic_cast<PhysicalLayerPacket *>(frame.top());
@@ -269,6 +277,12 @@ void Network::send(vector<Client> &clients) {
                 number = 0;
             }
             string to_go = client->routing_table[pApplicationLayerPacket->receiver_ID];
+            if(to_go == ""){
+                cout << "Error: Unreachable destination. Packets are dropped after "
+                     << pPhysicalLayerPacket->hopNumbers
+                     << " hops!" << endl;
+                number = 0;
+            }
             find_client(to_go, clients)->incoming_queue.push(queue.front());
             client->outgoing_queue.pop();
             queue = client->outgoing_queue;
@@ -378,13 +392,21 @@ void Network::receive(std::vector<Client> &clients) {
 
             std::stack<Packet *> tmpPack = client->incoming_queue.front();
             if (needDel) {
-                delete tmpPack.top();
-                tmpPack.pop();
-                delete tmpPack.top();
-                tmpPack.pop();
-                delete tmpPack.top();
-                tmpPack.pop();
-                delete tmpPack.top();
+                if(!tmpPack.empty()) {
+                    delete tmpPack.top();
+                    tmpPack.pop();
+                }
+                if(!tmpPack.empty()) {
+                    delete tmpPack.top();
+                    tmpPack.pop();
+                }
+                if(!tmpPack.empty()) {
+                    delete tmpPack.top();
+                    tmpPack.pop();
+                }
+                if(!tmpPack.empty()) {
+                    delete tmpPack.top();
+                }
             }
 
             client->incoming_queue.pop();
