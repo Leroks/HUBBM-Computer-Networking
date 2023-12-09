@@ -469,17 +469,30 @@ void Network::read_routing_tables(vector<Client> &clients, const string &filenam
 }
 
 vector<string> Network::read_commands(const string &filename) {
-    vector<string> commands;
-    fstream file(filename, ios::in);
-    string line;
-    getline(file, line);
+    std::vector<std::string> commands;
+    std::ifstream file(filename);
+
+    if (!file.is_open()) {
+        std::cerr << "Error opening file: " << filename << std::endl;
+        return commands;
+    }
+
+    std::string line;
+    std::getline(file, line);
     int count = 0;
-    count = stoi(line);
+
+    try {
+        count = std::stoi(line);
+    } catch (const std::invalid_argument &e) {
+        std::cerr << "Error converting count to integer in file: " << filename << std::endl;
+        return commands;
+    }
 
     for (int i = 0; i < count; ++i) {
-        getline(file, line);
+        std::getline(file, line);
         commands.push_back(line);
     }
+
     return commands;
 }
 
