@@ -186,6 +186,9 @@ void Network::showFrameInfo(string infoId, string outIn, int frameNo, vector<Cli
         queue = client->outgoing_queue;
     } else {
         queue = client->incoming_queue;
+        if(queue.empty()) {
+            //cout << "The queue is empty" << endl;
+        }
     }
 
     if (frameNo > queue.size()) {
@@ -558,11 +561,14 @@ void Network::process_commands(vector<Client> &clients, vector<string> &commands
         } else if (cmd == "SHOW_Q_INFO") {
             std::string infoId, outIn;
             ss >> infoId >> outIn;
+            if(ss.fail()) {
+                cout << "The stringstream() function failed" << endl;
+            }
             showQInfo(infoId, outIn, clients);
-        } else if (cmd == "SEND") {
-            send(clients);
         } else if (cmd == "RECEIVE") {
             receive(clients);
+        } else if (cmd == "SEND") {
+            send(clients);
         } else if (cmd == "PRINT_LOG") {
             std::string logId;
             ss >> logId;
@@ -631,13 +637,13 @@ void Network::read_routing_tables(vector<Client> &clients, const string &filenam
 }
 
 vector<string> Network::read_commands(const string &filename) {
-    std::vector<std::string> commands;
+    std::vector<std::string> readCommands;
     std::ifstream file(filename);
     int multiplier = 1;
 
     if (!file.is_open()) {
         std::cerr << "Error opening file: " << filename << std::endl;
-        return commands;
+        return readCommands;
     }
 
     std::string line;
@@ -648,16 +654,16 @@ vector<string> Network::read_commands(const string &filename) {
         count = std::stoi(line);
     } catch (const std::invalid_argument &e) {
         std::cerr << "Error converting count to integer in file: " << filename << std::endl;
-        return commands;
+        return readCommands;
     }
 
     for (int i = 0; i < count; ++i) {
         std::getline(file, line);
-        commands.push_back(line);
+        readCommands.push_back(line);
     }
     count *= multiplier;
 
-    return commands;
+    return readCommands;
 }
 
 Network::~Network() {
