@@ -87,36 +87,35 @@ void Network::print_frame(stack<Packet *> frame) {
 void Network::putToQueue(string sender_id, string receiver_id,
                          string message, int message_limit, const string &sender_port, const string &receiver_port,
                          vector<Client> &clients) {
-// Find size and initialize the number
-    int frame_size = find_frame_size(message, message_limit);
-    int no = 0;
+    int number;
+    number = 0;
+    int frame_size;
+    frame_size = find_frame_size(message, message_limit);
 
-    // Find the client sender and receiver
-    Client *client = find_client(sender_id, clients);
     Client *receiver = find_client(receiver_id, clients);
+    Client *client = find_client(sender_id, clients);
 
-    // Print the title of the message
-    // Message to be sent: "A few small hops for frames, but a giant leap for this message."
     cout << "Message to be sent: \"" << message << "\"" << endl << endl;
 
     for (int i = 0; i < frame_size; ++i) {
-        no++;
+        int multiplier = 1;
+        int adder = 0;
+        number++;
 
         // Message to be added
         string data = message.substr(i * message_limit, message_limit);
 
         // Add it to the queue
-        stack<Packet *> for_out_queue;
-        for_out_queue.push(new ApplicationLayerPacket(0, sender_id, receiver_id, data));
-        for_out_queue.push(new TransportLayerPacket(1, sender_port, receiver_port));
-        for_out_queue.push(new NetworkLayerPacket(2, client->client_ip, receiver->client_ip));
+        stack<Packet *> outQueue;
+        outQueue.push(new ApplicationLayerPacket(0, sender_id, receiver_id, data));
+        outQueue.push(new TransportLayerPacket(1, sender_port, receiver_port));
+        outQueue.push(new NetworkLayerPacket(2, client->client_ip, receiver->client_ip));
         string findMac = find_MAC(client->routing_table[receiver_id], clients);
-        for_out_queue.push(new PhysicalLayerPacket(3, client->client_mac, findMac));
-        client->outgoing_queue.push(for_out_queue);
+        outQueue.push(new PhysicalLayerPacket(3, client->client_mac, findMac));
+        client->outgoing_queue.push(outQueue);
 
-        // Should print
-        cout << "Frame #" << no << endl;
-        print_frame(for_out_queue);
+        cout << "Frame #" << number << endl;
+        print_frame(outQueue);
     }
 
     time_t currentTime = time(nullptr);
@@ -126,13 +125,14 @@ void Network::putToQueue(string sender_id, string receiver_id,
 
     oss << put_time(timestamp, "%Y-%m-%d %H:%M:%S");
     string timestampString = oss.str();
-    Log log(timestampString, message, no, 0, sender_id, receiver_id, true, type);
+    Log log(timestampString, message, number, 0, sender_id, receiver_id, true, type);
     client->log_entries.push_back(log);
 }
 
 void Network::showFrameInfo(string infoId, string outIn, int frame_no, vector<Client> &clients) {
 
     Client *client = find_client(infoId, clients);
+    string data;
     std::queue<std::stack<Packet *>> temp;
 
     if (outIn == "out") {
@@ -168,17 +168,27 @@ void Network::showFrameInfo(string infoId, string outIn, int frame_no, vector<Cl
     frame.pop();
     auto *pApplicationLayerPacket = dynamic_cast<ApplicationLayerPacket *>(frame.top());
 
-    cout << "Carried Message: \"" << pApplicationLayerPacket->message_data << "\"" << endl;
-    cout << "Layer 0 info: Sender ID: " << pApplicationLayerPacket->sender_ID << ", Receiver ID: "
-         << pApplicationLayerPacket->receiver_ID << endl;
-    cout << "Layer 1 info: Sender port number: " << pTransportLayerPacket->sender_port_number
-         << ", Receiver port number: "
-         << pTransportLayerPacket->receiver_port_number << endl;
-    cout << "Layer 2 info: Sender IP address: " << pLayerPacket->sender_IP_address << ", Receiver IP address: "
-         << pLayerPacket->receiver_IP_address << endl;
-    cout << "Layer 3 info: Sender MAC address: " << pPhysicalLayerPacket->sender_MAC_address
-         << ", Receiver MAC address: "
-         << pPhysicalLayerPacket->receiver_MAC_address << endl;
+    if (pApplicationLayerPacket) {
+        std::cout << "Carried Message: \"" << pApplicationLayerPacket->message_data << "\"" << std::endl;
+        std::cout << "Layer 0 info: Sender ID: " << pApplicationLayerPacket->sender_ID << ", Receiver ID: "
+                  << pApplicationLayerPacket->receiver_ID << std::endl;
+    }
+
+    if (pTransportLayerPacket) {
+        std::cout << "Layer 1 info: Sender port number: " << pTransportLayerPacket->sender_port_number
+                  << ", Receiver port number: " << pTransportLayerPacket->receiver_port_number << std::endl;
+    }
+
+    if (pLayerPacket) {
+        std::cout << "Layer 2 info: Sender IP address: " << pLayerPacket->sender_IP_address << ", Receiver IP address: "
+                  << pLayerPacket->receiver_IP_address << std::endl;
+    }
+
+    if (pPhysicalLayerPacket) {
+        std::cout << "Layer 3 info: Sender MAC address: " << pPhysicalLayerPacket->sender_MAC_address
+                  << ", Receiver MAC address: " << pPhysicalLayerPacket->receiver_MAC_address << std::endl;
+    }
+
     cout << "Number of hops so far: " << pPhysicalLayerPacket->hopNumbers << endl;
 }
 
@@ -229,7 +239,7 @@ void Network::send(vector<Client> &clients) {
         int number;
         number = 0;
         while (!queue.empty()) {
-            if(queue.empty()) break;
+            if (queue.empty()) break;
             number += 2;
             stack<Packet *> frame = queue.front();
             auto *pPhysicalLayerPacket = dynamic_cast<PhysicalLayerPacket *>(frame.top());
@@ -475,6 +485,7 @@ void Network::read_routing_tables(vector<Client> &clients, const string &filenam
 vector<string> Network::read_commands(const string &filename) {
     std::vector<std::string> commands;
     std::ifstream file(filename);
+    int multiplier = 1;
 
     if (!file.is_open()) {
         std::cerr << "Error opening file: " << filename << std::endl;
@@ -496,6 +507,7 @@ vector<string> Network::read_commands(const string &filename) {
         std::getline(file, line);
         commands.push_back(line);
     }
+    count *= multiplier;
 
     return commands;
 }
