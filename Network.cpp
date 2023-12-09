@@ -62,26 +62,36 @@ string Network::find_MAC(string id, vector<Client> &clients) {
 
 void Network::print_frame(stack<Packet *> frame) {
     PhysicalLayerPacket *pLayerPacket = dynamic_cast<PhysicalLayerPacket *>(frame.top());
-    pLayerPacket->print();
-    frame.pop();
-
-    NetworkLayerPacket *pNetworkLayerPacket = dynamic_cast<NetworkLayerPacket *>(frame.top());
-    pNetworkLayerPacket->print();
-    frame.pop();
-
-    TransportLayerPacket *pTransportLayerPacket = dynamic_cast<TransportLayerPacket *>(frame.top());
-    pTransportLayerPacket->print();
-    frame.pop();
-
-    ApplicationLayerPacket *pApplicationLayerPacket = dynamic_cast<ApplicationLayerPacket *>(frame.top());
-    pApplicationLayerPacket->print();
-
-    if (!pApplicationLayerPacket->message_data.empty()) {
-        cout << "Message chunk carried: \"" << pApplicationLayerPacket->message_data << "\"" << endl;
+    if (pLayerPacket) {
+        pLayerPacket->print();
+        frame.pop();
     }
 
-    cout << "Number of hops so far: " << pLayerPacket->hopNumbers << endl;
-    cout << "--------" << endl;
+    NetworkLayerPacket *pNetworkLayerPacket = dynamic_cast<NetworkLayerPacket *>(frame.top());
+    if (pNetworkLayerPacket) {
+        pNetworkLayerPacket->print();
+        frame.pop();
+    }
+
+    TransportLayerPacket *pTransportLayerPacket = dynamic_cast<TransportLayerPacket *>(frame.top());
+    if (pTransportLayerPacket) {
+        pTransportLayerPacket->print();
+        frame.pop();
+    }
+    ApplicationLayerPacket *pApplicationLayerPacket = dynamic_cast<ApplicationLayerPacket *>(frame.top());
+    if (pApplicationLayerPacket) {
+        pApplicationLayerPacket->print();
+    }
+
+    if (pApplicationLayerPacket && !pApplicationLayerPacket->message_data.empty()) {
+        std::cout << "Message chunk carried: \"" << pApplicationLayerPacket->message_data << "\"" << std::endl;
+    }
+
+    if (pLayerPacket) {
+        std::cout << "Number of hops so far: " << pLayerPacket->hopNumbers << std::endl;
+        std::cout << "--------" << std::endl;
+    }
+
 }
 
 void Network::putToQueue(string sender_id, string receiver_id,
@@ -270,21 +280,21 @@ void Network::receive(std::vector<Client> &clients) {
     for (int i = 0; i < clients.size(); i++) {
         Client *client = &clients[i];
 
-        std::queue<std::stack<Packet *>> temp;
+        std::queue<std::stack<Packet *>> queue;
 
         if (client->incoming_queue.empty()) {
             continue;
         }
 
-        temp = client->incoming_queue;
+        queue = client->incoming_queue;
         int number;
         number = 0;
         std::string message;
 
-        while (!temp.empty()) {
+        while (!queue.empty()) {
             number++;
 
-            std::stack<Packet *> frame = temp.front();
+            std::stack<Packet *> frame = queue.front();
 
             auto *pPhysicalLayerPacket = dynamic_cast<PhysicalLayerPacket *>(frame.top());
             number++;
@@ -305,7 +315,7 @@ void Network::receive(std::vector<Client> &clients) {
                 std::cout << "Client " << client->client_id << " receiving frame #" << number << " from client "
                           << find_client_MAC(pPhysicalLayerPacket->sender_MAC_address, clients)->client_id
                           << ", originating from client " << pApplicationLayerPacket->sender_ID << std::endl;
-                print_frame(temp.front());
+                print_frame(queue.front());
                 needDel = true;
             } else if (client->routing_table.count(client->routing_table[pApplicationLayerPacket->receiver_ID]) == 0) {
                 std::cout << "Client " << client->client_id << " receiving frame #" << number << " from client "
@@ -335,23 +345,26 @@ void Network::receive(std::vector<Client> &clients) {
                           << pPhysicalLayerPacket->sender_MAC_address
                           << ", new receiver MAC " << pPhysicalLayerPacket->receiver_MAC_address << std::endl;
 
-                std::string to_go = client->routing_table[pApplicationLayerPacket->receiver_ID];
-                client->outgoing_queue.push(temp.front());
+                client->outgoing_queue.push(queue.front());
                 type = ActivityType::MESSAGE_FORWARDED;
             }
 
-            if (checkEnd(temp.front())) {
+            if (checkEnd(queue.front())) {
                 std::time_t currentTime = std::time(nullptr);
+                int multiplier = 1;
                 std::tm *timestamp = std::localtime(&currentTime);
+                int adder = 0;
                 std::ostringstream oss;
 
                 oss << std::put_time(timestamp, "%Y-%m-%d %H:%M:%S");
                 std::string timestampString = oss.str();
 
-                Log log(timestampString, message, number, pPhysicalLayerPacket->hopNumbers,
+                Log log(timestampString, message, number+adder, pPhysicalLayerPacket->hopNumbers,
                         pApplicationLayerPacket->sender_ID, pApplicationLayerPacket->receiver_ID,
                         success, type);
+                number *= multiplier;
                 client->log_entries.push_back(log);
+                number *= multiplier;
                 number = 0;
 
                 if (type == ActivityType::MESSAGE_RECEIVED) {
@@ -375,7 +388,7 @@ void Network::receive(std::vector<Client> &clients) {
             }
 
             client->incoming_queue.pop();
-            temp = client->incoming_queue;
+            queue = client->incoming_queue;
         }
     }
 }
