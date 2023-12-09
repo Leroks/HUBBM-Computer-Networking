@@ -24,7 +24,7 @@ std::string Network::deleteSubstring(std::string str) {
     return str;
 }
 
-int Network::find_frame_size(string message, int message_limit) {
+int Network::findFrameSize(string message, int message_limit) {
     int size;
     size = message.size() / message_limit;
     if (message.size() % message_limit != 0) {
@@ -60,7 +60,7 @@ string Network::find_MAC(string id, vector<Client> &clients) {
     }
 }
 
-void Network::print_frame(stack<Packet *> frame) {
+void Network::printFrame(stack<Packet *> frame) {
     PhysicalLayerPacket *pLayerPacket = dynamic_cast<PhysicalLayerPacket *>(frame.top());
     if (pLayerPacket) {
         pLayerPacket->print();
@@ -100,7 +100,7 @@ void Network::putToQueue(string sender_id, string receiver_id,
     int number;
     number = 0;
     int frame_size;
-    frame_size = find_frame_size(message, message_limit);
+    frame_size = findFrameSize(message, message_limit);
 
     Client *receiver = findClient(receiver_id, clients);
     Client *client = findClient(sender_id, clients);
@@ -145,7 +145,7 @@ void Network::putToQueue(string sender_id, string receiver_id,
         client->outgoing_queue.push(outQueue);
 
         cout << "Frame #" << number*multiplier << endl;
-        print_frame(outQueue);
+        printFrame(outQueue);
     }
 
     time_t currentTime = time(nullptr);
@@ -266,22 +266,27 @@ void Network::queueInfo(string infoId, string outIn, vector<Client> &clients) {
     }
     Client *client = findClient(infoId, clients);
     std::queue<std::stack<Packet *>> queue;
+    if(queue.empty()) {
+        //cout << "The queue is empty" << endl;
+    }
 
     if (outIn == "out") {
         queue = client->outgoing_queue;
+        if(queue.empty()) {
+            //cout << "The queue is empty" << endl;
+        }
         cout << "Client " << infoId << " Outgoing Queue Status" << endl;
     } else {
         queue = client->incoming_queue;
+        if(queue.empty()) {
+            //cout << "The queue is empty" << endl;
+        }
         cout << "Client " << infoId << " Incoming Queue Status" << endl;
     }
 
     cout << "Current total number of frames: " << queue.size() << endl;
 }
 
-bool Network::hasSigns(const std::string &str) {
-    const string punctuation = ".?!";
-    return str.find_first_of(punctuation) != std::string::npos;
-}
 
 bool Network::checkEnd(stack<Packet *> frame) {
     if (frame.size() >= 3) {
@@ -298,6 +303,10 @@ bool Network::checkEnd(stack<Packet *> frame) {
     return false;
 }
 
+bool Network::hasSigns(const std::string &str) {
+    const string punctuation = ".?!";
+    return str.find_first_of(punctuation) != std::string::npos;
+}
 
 void Network::receive(std::vector<Client> &clients) {
     if(clients.empty()) {
@@ -353,7 +362,7 @@ void Network::receive(std::vector<Client> &clients) {
                 if(queue.front().empty()) {
                     number+=add;
                 }
-                print_frame(queue.front());
+                printFrame(queue.front());
                 del = true;
             } else if (client->routing_table.count(client->routing_table[pApplicationLayerPacket->receiver_ID]) == 0) {
                 std::cout << "Client " << client->client_id << " receiving frame #" << number << " from client "
@@ -490,7 +499,7 @@ void Network::send(vector<Client> &clients) {
             }
             if(!queue.front().empty())
             {
-                print_frame(queue.front());
+                printFrame(queue.front());
             }
             char tmpChar = pApplicationLayerPacket->message_data[pApplicationLayerPacket->message_data.size() - 1];
             if (tmpChar == '?' || tmpChar == '!' || tmpChar == '.' || tmpChar == 'xxx') {
@@ -671,8 +680,6 @@ vector<string> Network::read_commands(const string &filename) {
         std::getline(file, line);
         readCommands.push_back(line);
     }
-    count *= multiplier;
-
     return readCommands;
 }
 

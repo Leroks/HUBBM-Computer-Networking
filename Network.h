@@ -30,10 +30,10 @@ public:
                     string message, int message_limit, const string &sender_port, const string &receiver_port,
                     vector<Client> &clients);
 
-    int find_frame_size(string message, int message_limit);
 
     Client *findClient(string id, vector<Client> &clients);
 
+    int findFrameSize(string message, int message_limit);
 
     void receive(vector<Client> &clients);
 
@@ -49,7 +49,7 @@ public:
 
     static bool hasSigns(const std::string &str);
 
-    void print_frame(stack<Packet *> frame);
+    void printFrame(stack<Packet *> frame);
 
     // Initialize the network from the input files.
     vector<Client> read_clients(const string &filename);
