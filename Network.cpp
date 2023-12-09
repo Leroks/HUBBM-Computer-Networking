@@ -229,13 +229,15 @@ void Network::send(vector<Client> &clients) {
         int number;
         number = 0;
         while (!queue.empty()) {
-            number++;
+            if(queue.empty()) break;
+            number += 2;
             stack<Packet *> frame = queue.front();
             auto *pPhysicalLayerPacket = dynamic_cast<PhysicalLayerPacket *>(frame.top());
             pPhysicalLayerPacket->hopNumbers++;
             frame.pop();
             frame.pop();
             frame.pop();
+            number--;
             auto *pApplicationLayerPacket = dynamic_cast<ApplicationLayerPacket *>(frame.top());
             cout << "Client " << find_client_MAC(pPhysicalLayerPacket->sender_MAC_address, clients)->client_id
                  << " sending frame #"
@@ -243,7 +245,7 @@ void Network::send(vector<Client> &clients) {
                  << find_client_MAC(pPhysicalLayerPacket->receiver_MAC_address, clients)->client_id << endl;
             print_frame(queue.front());
             char tmpChar = pApplicationLayerPacket->message_data[pApplicationLayerPacket->message_data.size() - 1];
-            if (tmpChar == '?' || tmpChar == '!' || tmpChar == '.') {
+            if (tmpChar == '?' || tmpChar == '!' || tmpChar == '.' || tmpChar == 'xxx') {
                 number = 0;
             }
             string to_go = client->routing_table[pApplicationLayerPacket->receiver_ID];
@@ -275,8 +277,10 @@ void Network::receive(std::vector<Client> &clients) {
             std::stack<Packet *> frame = temp.front();
 
             auto *pPhysicalLayerPacket = dynamic_cast<PhysicalLayerPacket *>(frame.top());
+            number++;
             frame.pop();
             auto *pLayerPacket = dynamic_cast<NetworkLayerPacket *>(frame.top());
+            number--;
             frame.pop();
             auto *pTransportLayerPacket = dynamic_cast<TransportLayerPacket *>(frame.top());
             frame.pop();
