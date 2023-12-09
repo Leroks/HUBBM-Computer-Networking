@@ -116,10 +116,28 @@ void Network::putToQueue(string sender_id, string receiver_id,
 
         stack<Packet *> outQueue;
         outQueue.push(new ApplicationLayerPacket(0, sender_id, receiver_id, data));
+        if(outQueue.empty()) {
+            cout << "The stack is empty" << endl;
+        }
         outQueue.push(new TransportLayerPacket(1, sender_port, receiver_port));
+        if(outQueue.empty()) {
+            cout << "The stack is empty" << endl;
+        }
         outQueue.push(new NetworkLayerPacket(2, client->client_ip, receiver->client_ip));
+        if(outQueue.empty()) {
+            cout << "The stack is empty" << endl;
+        }
         string findMac = find_MAC(client->routing_table[receiver_id], clients);
+        if(findMac == ""){
+            cout << "Error: Unreachable destination. Packets are dropped after "
+                 << 0
+                 << " hops!" << endl;
+            return;
+        }
         outQueue.push(new PhysicalLayerPacket(3, client->client_mac, findMac));
+        if(outQueue.empty()) {
+            cout << "The stack is empty" << endl;
+        }
         adder*=multiplier;
         client->outgoing_queue.push(outQueue);
 
@@ -143,8 +161,14 @@ void Network::putToQueue(string sender_id, string receiver_id,
         cout << "The put_time() function failed" << endl;
     }
     string timestampString = oss.str();
+    if(timestampString.empty()) {
+        cout << "The string is empty" << endl;
+    }
     Log log(timestampString, message, number, 0, sender_id, receiver_id, true, type);
     client->log_entries.push_back(log);
+    if(client->log_entries.empty()) {
+        cout << "The vector is empty" << endl;
+    }
 }
 
 void Network::showFrameInfo(string infoId, string outIn, int frameNo, vector<Client> &clients) {

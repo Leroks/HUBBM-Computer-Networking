@@ -24,9 +24,11 @@ void Client::clearQueue(queue<stack<Packet*>>& q) {
     while (!q.empty()) {
         stack<Packet*>& tmp = q.front();
         while (!tmp.empty()) {
+            if(tmp.empty()) break;
             delete tmp.top();
             tmp.pop();
         }
+        if(q.empty()) break;
         q.pop();
     }
 }
