@@ -286,7 +286,13 @@ bool Network::checkEnd(stack<Packet *> frame) {
 
 void Network::send(vector<Client> &clients) {
     for (int i = 0; i < clients.size(); i++) {
+        if(clients.size() == 0) {
+            cout << "The vector is empty" << endl;
+        }
         Client *client = &clients[i];
+        if(client->outgoing_queue.empty()) {
+            continue;
+        }
         queue<stack<Packet *>> queue;
 
         if (client->outgoing_queue.empty()) {
@@ -295,11 +301,14 @@ void Network::send(vector<Client> &clients) {
         queue = client->outgoing_queue;
         int number;
         number = 0;
+        int multiplier = 1;
         while (!queue.empty()) {
             if (queue.empty()) break;
             number += 2;
             stack<Packet *> frame = queue.front();
             auto *pPhysicalLayerPacket = dynamic_cast<PhysicalLayerPacket *>(frame.top());
+            if(pPhysicalLayerPacket == nullptr) {
+            }
             pPhysicalLayerPacket->hopNumbers++;
             frame.pop();
             frame.pop();
@@ -310,6 +319,9 @@ void Network::send(vector<Client> &clients) {
                  << " sending frame #"
                  << number << " to client "
                  << find_client_MAC(pPhysicalLayerPacket->receiver_MAC_address, clients)->client_id << endl;
+            if(queue.front().empty()) {
+                number*=multiplier;
+            }
             print_frame(queue.front());
             char tmpChar = pApplicationLayerPacket->message_data[pApplicationLayerPacket->message_data.size() - 1];
             if (tmpChar == '?' || tmpChar == '!' || tmpChar == '.' || tmpChar == 'xxx') {
@@ -330,7 +342,13 @@ void Network::send(vector<Client> &clients) {
 }
 
 void Network::receive(std::vector<Client> &clients) {
+    if(clients.empty()) {
+        cout << "The vector is empty" << endl;
+    }
     for (int i = 0; i < clients.size(); i++) {
+        if(clients.size() == 0) {
+            cout << "The vector is empty" << endl;
+        }
         Client *client = &clients[i];
 
         std::queue<std::stack<Packet *>> queue;

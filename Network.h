@@ -21,15 +21,15 @@ public:
 
     void printLog(string log_id, vector<Client> &clients);
 
-    std::string deleteSubstring(std::string str);
+    Client *find_client_MAC(string MAC, vector<Client> &clients);
 
     Client *find_client(string id, vector<Client> &clients);
-
-    Client *find_client_MAC(string MAC, vector<Client> &clients);
 
     void putToQueue(string sender_id, string receiver_id,
                     string message, int message_limit, const string &sender_port, const string &receiver_port,
                     vector<Client> &clients);
+
+    std::string deleteSubstring(std::string str);
 
     int find_frame_size(string message, int message_limit);
 
