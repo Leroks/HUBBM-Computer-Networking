@@ -178,13 +178,28 @@ void Network::showFrameInfo(string infoId, string outIn, int frameNo, vector<Cli
         cout << "Current Frame #" << frameNo << " on the incoming queue of client " << infoId << endl;
     }
 
+    if(frame.empty()) {
+        cout << "The stack is empty" << endl;
+    }
     auto *pPhysicalLayerPacket = dynamic_cast<PhysicalLayerPacket *>(frame.top());
+    if(pPhysicalLayerPacket == nullptr) {
+        cout << "The dynamic_cast() function failed" << endl;
+    }
     frame.pop();
     auto *pLayerPacket = dynamic_cast<NetworkLayerPacket *>(frame.top());
+    if(pLayerPacket == nullptr) {
+        cout << "The dynamic_cast() function failed" << endl;
+    }
     frame.pop();
     auto *pTransportLayerPacket = dynamic_cast<TransportLayerPacket *>(frame.top());
+    if(pTransportLayerPacket == nullptr) {
+        cout << "The dynamic_cast() function failed" << endl;
+    }
     frame.pop();
     auto *pApplicationLayerPacket = dynamic_cast<ApplicationLayerPacket *>(frame.top());
+    if(pApplicationLayerPacket == nullptr) {
+        cout << "The dynamic_cast() function failed" << endl;
+    }
 
     if (pApplicationLayerPacket) {
         std::cout << "Carried Message: \"" << pApplicationLayerPacket->message_data << "\"" << std::endl;
