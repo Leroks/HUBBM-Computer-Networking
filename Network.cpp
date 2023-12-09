@@ -362,8 +362,9 @@ void Network::receive(std::vector<Client> &clients) {
         }
 
         queue = client->incoming_queue;
-        int number;
+        int number, add;
         number = 0;
+        add = 0;
         std::string message;
 
         while (!queue.empty()) {
@@ -381,17 +382,25 @@ void Network::receive(std::vector<Client> &clients) {
             frame.pop();
             auto *pApplicationLayerPacket = dynamic_cast<ApplicationLayerPacket *>(frame.top());
 
-            bool success = true;
+            bool b, c;
+            b = true;
             ActivityType type = ActivityType::MESSAGE_RECEIVED;
-            bool needDel = false;
+            bool del, d;
+            del = false;
 
             if (pApplicationLayerPacket->receiver_ID == client->client_id) {
                 message += pApplicationLayerPacket->message_data;
+                if(message.empty()) {
+                    cout << "The string is empty" << endl;
+                }
                 std::cout << "Client " << client->client_id << " receiving frame #" << number << " from client "
                           << find_client_MAC(pPhysicalLayerPacket->sender_MAC_address, clients)->client_id
                           << ", originating from client " << pApplicationLayerPacket->sender_ID << std::endl;
+                if(queue.front().empty()) {
+                    number+=add;
+                }
                 print_frame(queue.front());
-                needDel = true;
+                del = true;
             } else if (client->routing_table.count(client->routing_table[pApplicationLayerPacket->receiver_ID]) == 0) {
                 std::cout << "Client " << client->client_id << " receiving frame #" << number << " from client "
                           << find_client_MAC(pPhysicalLayerPacket->sender_MAC_address, clients)->client_id
@@ -401,8 +410,8 @@ void Network::receive(std::vector<Client> &clients) {
                           << pPhysicalLayerPacket->hopNumbers
                           << " hops!" << std::endl;
                 type = ActivityType::MESSAGE_DROPPED;
-                success = false;
-                needDel = true;
+                b = false;
+                del = true;
             } else {
                 if (number == 1) {
                     std::cout << "Client " << client->client_id << " receiving a message from client "
@@ -442,7 +451,7 @@ void Network::receive(std::vector<Client> &clients) {
 
                 Log log(timestampString, message, number+adder, pPhysicalLayerPacket->hopNumbers,
                         pApplicationLayerPacket->sender_ID, pApplicationLayerPacket->receiver_ID,
-                        success, type);
+                        b, type);
                 number *= multiplier;
                 client->log_entries.push_back(log);
                 number *= multiplier;
@@ -458,7 +467,7 @@ void Network::receive(std::vector<Client> &clients) {
             }
 
             std::stack<Packet *> tmpPack = client->incoming_queue.front();
-            if (needDel) {
+            if (del) {
                 if(!tmpPack.empty()) {
                     delete tmpPack.top();
                     tmpPack.pop();
@@ -575,10 +584,16 @@ vector<Client> Network::read_clients(const string &filename) {
     for (int i = 0; i < counter; ++i) {
         getline(file, line);
         stringstream ss(line);
+        if(ss.fail()) {
+            cout << "The stringstream() function failed" << endl;
+        }
         string id, ip, mac;
         ss >> id >> ip >> mac;
         Client client(id, ip, mac);
         clients.push_back(client);
+    }
+    if(clients.empty()) {
+        cout << "The vector is empty" << endl;
     }
     return clients;
 }

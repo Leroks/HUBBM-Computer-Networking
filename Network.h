@@ -23,8 +23,6 @@ public:
 
     Client *find_client_MAC(string MAC, vector<Client> &clients);
 
-    Client *find_client(string id, vector<Client> &clients);
-
     void putToQueue(string sender_id, string receiver_id,
                     string message, int message_limit, const string &sender_port, const string &receiver_port,
                     vector<Client> &clients);
@@ -32,6 +30,8 @@ public:
     std::string deleteSubstring(std::string str);
 
     int find_frame_size(string message, int message_limit);
+    Client *find_client(string id, vector<Client> &clients);
+
 
     void receive(vector<Client> &clients);
 
