@@ -19,7 +19,7 @@ public:
     process_commands(vector<Client> &clients, vector<string> &commands, int message_limit, const string &sender_port,
                      const string &receiver_port);
 
-    void printLog(string log_id, vector<Client> &clients);
+    void printLog(string logId, vector<Client> &clients);
 
     Client *find_client_MAC(string MAC, vector<Client> &clients);
 
@@ -30,6 +30,7 @@ public:
     std::string deleteSubstring(std::string str);
 
     int find_frame_size(string message, int message_limit);
+
     Client *find_client(string id, vector<Client> &clients);
 
 
@@ -41,13 +42,13 @@ public:
 
     void send(vector<Client> &clients);
 
-    void showQInfo(string infoId, string outIn, vector<Client> &clients);
+    void queueInfo(string infoId, string outIn, vector<Client> &clients);
 
     string find_MAC(string id, vector<Client> &clients);
 
-    void print_frame(stack<Packet *> frame);
+    static bool hasSigns(const std::string &str);
 
-    static bool containsPunctuation(const std::string &str);
+    void print_frame(stack<Packet *> frame);
 
     // Initialize the network from the input files.
     vector<Client> read_clients(const string &filename);

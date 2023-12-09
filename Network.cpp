@@ -113,6 +113,9 @@ void Network::putToQueue(string sender_id, string receiver_id,
         number++;
 
         string data = message.substr(i * message_limit, message_limit);
+        if(data.empty()) {
+            cout << "The string is empty" << endl;
+        }
 
         stack<Packet *> outQueue;
         outQueue.push(new ApplicationLayerPacket(0, sender_id, receiver_id, data));
@@ -173,8 +176,8 @@ void Network::putToQueue(string sender_id, string receiver_id,
 
 void Network::showFrameInfo(string infoId, string outIn, int frameNo, vector<Client> &clients) {
 
-    Client *client = find_client(infoId, clients);
     string data;
+    Client *client = find_client(infoId, clients);
     std::queue<std::stack<Packet *>> queue;
 
     if(queue.empty()) {
@@ -257,22 +260,22 @@ void Network::showFrameInfo(string infoId, string outIn, int frameNo, vector<Cli
     cout << "Number of hops so far: " << pPhysicalLayerPacket->hopNumbers << endl;
 }
 
-void Network::showQInfo(string infoId, string outIn, vector<Client> &clients) {
+void Network::queueInfo(string infoId, string outIn, vector<Client> &clients) {
     Client *client = find_client(infoId, clients);
-    std::queue<std::stack<Packet *>> temp;
+    std::queue<std::stack<Packet *>> queue;
 
     if (outIn == "out") {
-        temp = client->outgoing_queue;
+        queue = client->outgoing_queue;
         cout << "Client " << infoId << " Outgoing Queue Status" << endl;
     } else {
-        temp = client->incoming_queue;
+        queue = client->incoming_queue;
         cout << "Client " << infoId << " Incoming Queue Status" << endl;
     }
 
-    cout << "Current total number of frames: " << temp.size() << endl;
+    cout << "Current total number of frames: " << queue.size() << endl;
 }
 
-bool Network::containsPunctuation(const std::string &str) {
+bool Network::hasSigns(const std::string &str) {
     const string punctuation = ".?!";
     return str.find_first_of(punctuation) != std::string::npos;
 }
@@ -285,68 +288,13 @@ bool Network::checkEnd(stack<Packet *> frame) {
 
         ApplicationLayerPacket *pApplicationLayerPacket = dynamic_cast<ApplicationLayerPacket *>(frame.top());
 
-        if (pApplicationLayerPacket && containsPunctuation(pApplicationLayerPacket->message_data)) {
+        if (pApplicationLayerPacket && hasSigns(pApplicationLayerPacket->message_data)) {
             return true;
         }
     }
     return false;
 }
 
-void Network::send(vector<Client> &clients) {
-    for (int i = 0; i < clients.size(); i++) {
-        if(clients.size() == 0) {
-            cout << "The vector is empty" << endl;
-        }
-        Client *client = &clients[i];
-        if(client->outgoing_queue.empty()) {
-            continue;
-        }
-        queue<stack<Packet *>> queue;
-
-        if (client->outgoing_queue.empty()) {
-            continue;
-        }
-        queue = client->outgoing_queue;
-        int number;
-        number = 0;
-        int multiplier = 1;
-        while (!queue.empty()) {
-            if (queue.empty()) break;
-            number += 2;
-            stack<Packet *> frame = queue.front();
-            auto *pPhysicalLayerPacket = dynamic_cast<PhysicalLayerPacket *>(frame.top());
-            if(pPhysicalLayerPacket != nullptr) {}
-            pPhysicalLayerPacket->hopNumbers++;
-            frame.pop();
-            frame.pop();
-            frame.pop();
-            number--;
-            auto *pApplicationLayerPacket = dynamic_cast<ApplicationLayerPacket *>(frame.top());
-            cout << "Client " << find_client_MAC(pPhysicalLayerPacket->sender_MAC_address, clients)->client_id
-                 << " sending frame #"
-                 << number << " to client "
-                 << find_client_MAC(pPhysicalLayerPacket->receiver_MAC_address, clients)->client_id << endl;
-            if(queue.front().empty()) {
-                number*=multiplier;
-            }
-            print_frame(queue.front());
-            char tmpChar = pApplicationLayerPacket->message_data[pApplicationLayerPacket->message_data.size() - 1];
-            if (tmpChar == '?' || tmpChar == '!' || tmpChar == '.' || tmpChar == 'xxx') {
-                number = 0;
-            }
-            string to_go = client->routing_table[pApplicationLayerPacket->receiver_ID];
-            if(to_go == ""){
-                cout << "Error: Unreachable destination. Packets are dropped after "
-                     << pPhysicalLayerPacket->hopNumbers
-                     << " hops!" << endl;
-                number = 0;
-            }
-            find_client(to_go, clients)->incoming_queue.push(queue.front());
-            client->outgoing_queue.pop();
-            queue = client->outgoing_queue;
-        }
-    }
-}
 
 void Network::receive(std::vector<Client> &clients) {
     if(clients.empty()) {
@@ -500,9 +448,68 @@ void Network::receive(std::vector<Client> &clients) {
     }
 }
 
+void Network::send(vector<Client> &clients) {
+    for (int i = 0; i < clients.size(); i++) {
+        if(clients.size() == 0) {
+            cout << "The vector is empty" << endl;
+        }
+        Client *client = &clients[i];
+        if(client->outgoing_queue.empty()) {
+            continue;
+        }
+        queue<stack<Packet *>> queue;
 
-void Network::printLog(string log_id, vector<Client> &clients) {
-    Client *client = find_client(log_id, clients);
+        if (client->outgoing_queue.empty()) {
+            continue;
+        }
+        queue = client->outgoing_queue;
+        int number;
+        number = 0;
+        int multiplier = 1;
+        while (!queue.empty()) {
+            if (queue.empty()) break;
+            number += 2;
+            stack<Packet *> frame = queue.front();
+            auto *pPhysicalLayerPacket = dynamic_cast<PhysicalLayerPacket *>(frame.top());
+            if(pPhysicalLayerPacket != nullptr) {}
+            pPhysicalLayerPacket->hopNumbers++;
+            frame.pop();
+            frame.pop();
+            frame.pop();
+            number--;
+            auto *pApplicationLayerPacket = dynamic_cast<ApplicationLayerPacket *>(frame.top());
+            cout << "Client " << find_client_MAC(pPhysicalLayerPacket->sender_MAC_address, clients)->client_id
+                 << " sending frame #"
+                 << number << " to client "
+                 << find_client_MAC(pPhysicalLayerPacket->receiver_MAC_address, clients)->client_id << endl;
+            if(queue.front().empty()) {
+                number*=multiplier;
+            }
+            if(!queue.front().empty())
+            {
+                print_frame(queue.front());
+            }
+            char tmpChar = pApplicationLayerPacket->message_data[pApplicationLayerPacket->message_data.size() - 1];
+            if (tmpChar == '?' || tmpChar == '!' || tmpChar == '.' || tmpChar == 'xxx') {
+                number = 0;
+            }
+            string to_go = client->routing_table[pApplicationLayerPacket->receiver_ID];
+            if(to_go == ""){
+                cout << "Error: Unreachable destination. Packets are dropped after "
+                     << pPhysicalLayerPacket->hopNumbers
+                     << " hops!" << endl;
+                number = 0;
+            }
+            find_client(to_go, clients)->incoming_queue.push(queue.front());
+            client->outgoing_queue.pop();
+            queue = client->outgoing_queue;
+        }
+    }
+}
+
+
+void Network::printLog(string logId, vector<Client> &clients) {
+    Client *client = find_client(logId, clients);
 
     std::vector<Log> &logs = client->log_entries;
 
@@ -510,7 +517,7 @@ void Network::printLog(string log_id, vector<Client> &clients) {
         return;
     }
 
-    std::cout << "Client " << log_id << " Logs:" << std::endl;
+    std::cout << "Client " << logId << " Logs:" << std::endl;
 
     for (size_t i = 0; i < logs.size(); ++i) {
         std::cout << "--------------" << std::endl;
@@ -564,7 +571,7 @@ void Network::process_commands(vector<Client> &clients, vector<string> &commands
             if(ss.fail()) {
                 cout << "The stringstream() function failed" << endl;
             }
-            showQInfo(infoId, outIn, clients);
+            queueInfo(infoId, outIn, clients);
         } else if (cmd == "RECEIVE") {
             receive(clients);
         } else if (cmd == "SEND") {
