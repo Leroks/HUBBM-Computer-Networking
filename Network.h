@@ -19,7 +19,7 @@ public:
     process_commands(vector<Client> &clients, vector<string> &commands, int message_limit, const string &sender_port,
                      const string &receiver_port);
 
-    void print_log(string log_id, vector<Client> &clients);
+    void printLog(string log_id, vector<Client> &clients);
 
     std::string deleteSubstring(std::string str);
 

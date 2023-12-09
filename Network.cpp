@@ -448,14 +448,20 @@ void Network::receive(std::vector<Client> &clients) {
                 }
             }
 
+            if(client->incoming_queue.empty()) {
+                break;
+            }
             client->incoming_queue.pop();
+            if(client->incoming_queue.empty()) {
+                break;
+            }
             queue = client->incoming_queue;
         }
     }
 }
 
 
-void Network::print_log(string log_id, vector<Client> &clients) {
+void Network::printLog(string log_id, vector<Client> &clients) {
     Client *client = find_client(log_id, clients);
 
     std::vector<Log> &logs = client->log_entries;
@@ -469,6 +475,9 @@ void Network::print_log(string log_id, vector<Client> &clients) {
     for (size_t i = 0; i < logs.size(); ++i) {
         std::cout << "--------------" << std::endl;
         std::cout << "Log Entry #" << i + 1 << ":" << std::endl;
+        if(logs.empty()) {
+            cout << "The vector is empty" << endl;
+        }
         logs[i].print();
     }
 }
@@ -492,28 +501,35 @@ void Network::process_commands(vector<Client> &clients, vector<string> &commands
 
         if (cmd == "MESSAGE") {
             std::string sender_id, receiver_id, message;
+            if(ss.fail()) {
+                cout << "The stringstream() function failed" << endl;
+            }
             ss >> sender_id >> receiver_id;
             std::getline(ss, message);
             message = deleteSubstring(message);
+            if(message.empty()) {
+                cout << "The string is empty" << endl;
+            }
             putToQueue(sender_id, receiver_id, message, message_limit, sender_port, receiver_port, clients);
 
         } else if (cmd == "SHOW_FRAME_INFO") {
-            std::string info_id, out_in;
-            int frame_no;
-            ss >> info_id >> out_in >> frame_no;
-            showFrameInfo(info_id, out_in, frame_no, clients);
+            std::string infoId, outIn;
+            int frameNo;
+            frameNo = 0;
+            ss >> infoId >> outIn >> frameNo;
+            showFrameInfo(infoId, outIn, frameNo, clients);
         } else if (cmd == "SHOW_Q_INFO") {
-            std::string info_id, out_in;
-            ss >> info_id >> out_in;
-            showQInfo(info_id, out_in, clients);
+            std::string infoId, outIn;
+            ss >> infoId >> outIn;
+            showQInfo(infoId, outIn, clients);
         } else if (cmd == "SEND") {
             send(clients);
         } else if (cmd == "RECEIVE") {
             receive(clients);
         } else if (cmd == "PRINT_LOG") {
-            std::string log_id;
-            ss >> log_id;
-            print_log(log_id, clients);
+            std::string logId;
+            ss >> logId;
+            printLog(logId, clients);
         } else {
             std::cout << "Invalid command." << std::endl;
         }
@@ -540,19 +556,34 @@ vector<Client> Network::read_clients(const string &filename) {
 }
 
 void Network::read_routing_tables(vector<Client> &clients, const string &filename) {
-    std::string line;
-    fstream file(filename, ios::in);
-    int count;
-    count = clients.size();
-    for (int i = 0; i < count; i++) {
-        for (int j = 0; j + 1 < count; j++) {
-            getline(file, line);
-            stringstream ss(line);
-            string id, id2;
-            ss >> id >> id2;
-            clients[i].routing_table[id] = id2;
+    std::ifstream file(filename);
+
+    if (!file.is_open()) {
+        std::cerr << "Error: Unable to open file " << filename << std::endl;
+        return;
+    }
+
+    int count = clients.size();
+
+    for (int i = 0; i < count; ++i) {
+        for (int j = 0; j < count; ++j) {
+            std::string line;
+            if (std::getline(file, line)) {
+                std::stringstream ss(line);
+                if(ss.fail()) {
+                    cout << "The stringstream() function failed" << endl;
+                }
+                std::string id, id2;
+                if (ss >> id >> id2) {
+                    clients[i].routing_table[id] = id2;
+                } else {
+                    std::cerr << "Error: Invalid line format in " << filename << std::endl;
+                }
+            } else {
+                std::cerr << "Error: Unexpected end of file in " << filename << std::endl;
+                return;
+            }
         }
-        std::getline(file, line);
     }
 }
 
