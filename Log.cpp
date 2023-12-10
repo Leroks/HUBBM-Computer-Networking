@@ -16,10 +16,7 @@ Log::Log(const string &_timestamp, const string &_message, int _number_of_frames
     activity_type = _type;
 }
 
-Log::~Log() {
-    // TODO: Free any dynamically allocated memory if necessary.
-}
-void Log::print() {
+void Log::out() const {
     const char* activityTypes[] = {
             "Message Received",
             "Message Forwarded",
@@ -38,6 +35,10 @@ void Log::print() {
     cout << "Success: " << success << endl;
 
     if (!message_content.empty()) {
-        cout << "Message: \"" << message_content << "\"" << endl;
+        cout << "Message: \"" << this->message_content << "\"" << endl;
     }
+}
+
+Log::~Log() {
+    // TODO: Free any dynamically allocated memory if necessary.
 }

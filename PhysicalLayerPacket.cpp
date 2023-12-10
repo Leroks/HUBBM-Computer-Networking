@@ -7,7 +7,7 @@ PhysicalLayerPacket::PhysicalLayerPacket(int _layer_ID, const string& _sender_MA
 }
 
 void PhysicalLayerPacket::print() {
-    // Call the base class (Packet) print function
+    // Call the base class (Packet) out function
     Packet::print();
 
     // Print layer-specific properties

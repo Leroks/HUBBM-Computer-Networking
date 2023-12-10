@@ -8,7 +8,7 @@ TransportLayerPacket::TransportLayerPacket(int _layer_ID, string _sender_port, s
 }
 
 void TransportLayerPacket::print() {
-    // TODO: Override the virtual print function from Packet class to additionally print layer-specific properties.
+    // TODO: Override the virtual print function from Packet class to additionally out layer-specific properties.
     cout << "Sender port number: " << sender_port_number << ", Receiver port number: " << receiver_port_number << endl;
 }
 

@@ -491,7 +491,7 @@ void Network::printLog(string logId, vector<Client> &clients) {
         if (logs.empty()) {
             cout << "The vector is empty" << endl;
         }
-        logs[i].print();
+        logs[i].out();
     }
 }
 
@@ -642,6 +642,40 @@ void Network::process_commands(vector<Client> &clients, vector<string> &commands
     }
 }
 
+
+vector<string> Network::read_commands(const string &filename) {
+    std::vector<std::string> readCommands;
+    std::ifstream file(filename);
+    int multiplier = 1;
+
+    if (!file.is_open()) {
+        std::cerr << "Error opening file: " << filename << std::endl;
+        return readCommands;
+    }
+
+    std::string line;
+    std::getline(file, line);
+    int count = 0;
+
+    try {
+        count = std::stoi(line);
+    } catch (const std::invalid_argument &e) {
+        std::cerr << "Error converting count to integer in file: " << filename << std::endl;
+        return readCommands;
+    }
+
+    for (int i = 0; i < count; ++i) {
+        std::getline(file, line);
+
+        if (line.empty()) {
+            std::cerr << "Error: Empty line in file: " << filename << std::endl;
+            return readCommands;
+        }
+        readCommands.push_back(line);
+    }
+    return readCommands;
+}
+
 vector<Client> Network::read_clients(const string &filename) {
     vector<Client> clients;
     string line;
@@ -671,7 +705,7 @@ vector<Client> Network::read_clients(const string &filename) {
 }
 
 void Network::read_routing_tables(vector<Client> &clients, const string &filename) {
-    std::ifstream file(filename);
+    ifstream file(filename);
 
     if (!file.is_open()) {
         std::cerr << "Error: Unable to open file " << filename << std::endl;
@@ -702,33 +736,6 @@ void Network::read_routing_tables(vector<Client> &clients, const string &filenam
     }
 }
 
-vector<string> Network::read_commands(const string &filename) {
-    std::vector<std::string> readCommands;
-    std::ifstream file(filename);
-    int multiplier = 1;
-
-    if (!file.is_open()) {
-        std::cerr << "Error opening file: " << filename << std::endl;
-        return readCommands;
-    }
-
-    std::string line;
-    std::getline(file, line);
-    int count = 0;
-
-    try {
-        count = std::stoi(line);
-    } catch (const std::invalid_argument &e) {
-        std::cerr << "Error converting count to integer in file: " << filename << std::endl;
-        return readCommands;
-    }
-
-    for (int i = 0; i < count; ++i) {
-        std::getline(file, line);
-        readCommands.push_back(line);
-    }
-    return readCommands;
-}
 
 Network::~Network() {
 }

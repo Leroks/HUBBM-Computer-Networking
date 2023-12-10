@@ -3,7 +3,7 @@
 
 #include "Packet.h"
 
-// Extends Packet class. Have additional layer-specific member variables and overrides the virtual print function.
+// Extends Packet class. Have additional layer-specific member variables and overrides the virtual out function.
 class ApplicationLayerPacket : public Packet {
 public:
     ApplicationLayerPacket(int _layer_ID, const string& _sender_ID, const string& _receiver_ID, const string& _message_data);

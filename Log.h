@@ -32,7 +32,7 @@ public:
     string receiver_id;
     bool success_status;
     ActivityType activity_type;
-    void print();
+    void out() const;
 };
 
 

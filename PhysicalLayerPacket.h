@@ -5,7 +5,7 @@
 
 using namespace std;
 
-// Extends Packet class. Have additional layer-specific member variables and overrides the virtual print function.
+// Extends Packet class. Have additional layer-specific member variables and overrides the virtual out function.
 class PhysicalLayerPacket : public Packet {
 public:
     PhysicalLayerPacket(int layerID, const string& senderMAC, const string& receiverMAC);
