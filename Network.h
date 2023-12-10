@@ -26,9 +26,8 @@ public:
 
     std::string deleteSubstring(std::string str);
 
-    void putToQueue(string sender_id, string receiver_id,
-                    string message, int message_limit, const string &sender_port, const string &receiver_port,
-                    vector<Client> &clients);
+    void toQueue(string senderId, const string &sender_port, string receiverId, int message_limit, string message,
+                 const string &receiver_port, vector<Client> &clients);
 
 
     Client *findClient(string id, vector<Client> &clients);

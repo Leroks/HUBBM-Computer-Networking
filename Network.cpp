@@ -94,16 +94,15 @@ void Network::printFrame(stack<Packet *> frame) {
 
 }
 
-void Network::putToQueue(string sender_id, string receiver_id,
-                         string message, int message_limit, const string &sender_port, const string &receiver_port,
-                         vector<Client> &clients) {
+void Network::toQueue(string senderId, const string &sender_port, string receiverId, int message_limit, string message,
+                      const string &receiver_port, vector<Client> &clients) {
     int number;
     number = 0;
     int frame_size;
     frame_size = findFrameSize(message, message_limit);
 
-    Client *receiver = findClient(receiver_id, clients);
-    Client *client = findClient(sender_id, clients);
+    Client *receiver = findClient(receiverId, clients);
+    Client *client = findClient(senderId, clients);
 
     cout << "Message to be sent: \"" << message << "\"" << endl << endl;
 
@@ -118,7 +117,7 @@ void Network::putToQueue(string sender_id, string receiver_id,
         }
 
         stack<Packet *> outQueue;
-        outQueue.push(new ApplicationLayerPacket(0, sender_id, receiver_id, data));
+        outQueue.push(new ApplicationLayerPacket(0, senderId, receiverId, data));
         if(outQueue.empty()) {
             cout << "The stack is empty" << endl;
         }
@@ -130,7 +129,7 @@ void Network::putToQueue(string sender_id, string receiver_id,
         if(outQueue.empty()) {
             cout << "The stack is empty" << endl;
         }
-        string findMac = find_MAC(client->routing_table[receiver_id], clients);
+        string findMac = find_MAC(client->routing_table[receiverId], clients);
         if(findMac == ""){
             cout << "Error: Unreachable destination. Packets are dropped after "
                  << 0
@@ -167,7 +166,7 @@ void Network::putToQueue(string sender_id, string receiver_id,
     if(timestampString.empty()) {
         cout << "The string is empty" << endl;
     }
-    Log log(timestampString, message, number, 0, sender_id, receiver_id, true, type);
+    Log log(timestampString, message, number, 0, senderId, receiverId, true, type);
     client->log_entries.push_back(log);
     if(client->log_entries.empty()) {
         cout << "The vector is empty" << endl;
@@ -572,7 +571,7 @@ void Network::process_commands(vector<Client> &clients, vector<string> &commands
             if(message.empty()) {
                 cout << "The string is empty" << endl;
             }
-            putToQueue(sender_id, receiver_id, message, message_limit, sender_port, receiver_port, clients);
+            toQueue(sender_id, sender_port, receiver_id, message_limit, message, receiver_port, clients);
 
         } else if (cmd == "SHOW_FRAME_INFO") {
             std::string infoId, outIn;
