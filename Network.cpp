@@ -612,9 +612,12 @@ vector<Client> Network::read_clients(const string &filename) {
         if(ss.fail()) {
             cout << "The stringstream() function failed" << endl;
         }
-        string id, ip, mac;
+        string mac, id, ip;
         ss >> id >> ip >> mac;
         Client client(id, ip, mac);
+        if(client.client_id.empty()) {
+            cout << "The string is empty" << endl;
+        }
         clients.push_back(client);
     }
     if(clients.empty()) {
