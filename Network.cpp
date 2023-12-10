@@ -112,63 +112,63 @@ void Network::toQueue(string senderId, const string &sender_port, string receive
         number++;
 
         string data = message.substr(i * message_limit, message_limit);
-        if(data.empty()) {
+        if (data.empty()) {
             cout << "The string is empty" << endl;
         }
 
         stack<Packet *> outQueue;
         outQueue.push(new ApplicationLayerPacket(0, senderId, receiverId, data));
-        if(outQueue.empty()) {
+        if (outQueue.empty()) {
             cout << "The stack is empty" << endl;
         }
         outQueue.push(new TransportLayerPacket(1, sender_port, receiver_port));
-        if(outQueue.empty()) {
+        if (outQueue.empty()) {
             cout << "The stack is empty" << endl;
         }
         outQueue.push(new NetworkLayerPacket(2, client->client_ip, receiver->client_ip));
-        if(outQueue.empty()) {
+        if (outQueue.empty()) {
             cout << "The stack is empty" << endl;
         }
         string findMac = find_MAC(client->routing_table[receiverId], clients);
-        if(findMac == ""){
+        if (findMac == "") {
             cout << "Error: Unreachable destination. Packets are dropped after "
                  << 0
                  << " hops!" << endl;
             return;
         }
         outQueue.push(new PhysicalLayerPacket(3, client->client_mac, findMac));
-        if(outQueue.empty()) {
+        if (outQueue.empty()) {
             cout << "The stack is empty" << endl;
         }
-        adder*=multiplier;
+        adder *= multiplier;
         client->outgoing_queue.push(outQueue);
 
-        cout << "Frame #" << number*multiplier << endl;
+        cout << "Frame #" << number * multiplier << endl;
         printFrame(outQueue);
     }
 
     time_t currentTime = time(nullptr);
-    if(currentTime == -1) {
+    if (currentTime == -1) {
         cout << "The time() function failed" << endl;
     }
     tm *timestamp = localtime(&currentTime);
-    if(timestamp == nullptr) {
+    if (timestamp == nullptr) {
         cout << "The localtime() function failed" << endl;
     }
     ActivityType type = ActivityType::MESSAGE_SENT;
     ostringstream oss;
 
     oss << put_time(timestamp, "%Y-%m-%d %H:%M:%S");
-    if(oss.fail()) {
+    if (oss.fail()) {
         cout << "The put_time() function failed" << endl;
     }
     string timestampString = oss.str();
-    if(timestampString.empty()) {
+    if (timestampString.empty()) {
         cout << "The string is empty" << endl;
     }
     Log log(timestampString, message, number, 0, senderId, receiverId, true, type);
     client->log_entries.push_back(log);
-    if(client->log_entries.empty()) {
+    if (client->log_entries.empty()) {
         cout << "The vector is empty" << endl;
     }
 }
@@ -179,7 +179,7 @@ void Network::showFrameInfo(string infoId, string outIn, int frameNo, vector<Cli
     Client *client = findClient(infoId, clients);
     std::queue<std::stack<Packet *>> queue;
 
-    if(queue.empty()) {
+    if (queue.empty()) {
         //cout << "The queue is empty" << endl;
     }
 
@@ -188,14 +188,20 @@ void Network::showFrameInfo(string infoId, string outIn, int frameNo, vector<Cli
         queue = client->outgoing_queue;
     } else {
         queue = client->incoming_queue;
-        if(queue.empty()) {
+        if (queue.empty()) {
             //cout << "The queue is empty" << endl;
         }
     }
 
     if (frameNo > queue.size()) {
         cout << "No such frame." << endl;
+        if (queue.empty()) {
+            //cout << "The queue is empty" << endl;
+        }
         return;
+    }
+    if (queue.empty()) {
+        //cout << "The queue is empty" << endl;
     }
 
     for (int i = 0; i + 1 < frameNo; i++) {
@@ -212,26 +218,26 @@ void Network::showFrameInfo(string infoId, string outIn, int frameNo, vector<Cli
         cout << "Current Frame #" << frameNo << " on the incoming queue of client " << infoId << endl;
     }
 
-    if(frame.empty()) {
+    if (frame.empty()) {
         cout << "The stack is empty" << endl;
     }
     auto *pPhysicalLayerPacket = dynamic_cast<PhysicalLayerPacket *>(frame.top());
-    if(pPhysicalLayerPacket == nullptr) {
+    if (pPhysicalLayerPacket == nullptr) {
         cout << "The dynamic_cast() function failed" << endl;
     }
     frame.pop();
     auto *pLayerPacket = dynamic_cast<NetworkLayerPacket *>(frame.top());
-    if(pLayerPacket == nullptr) {
+    if (pLayerPacket == nullptr) {
         cout << "The dynamic_cast() function failed" << endl;
     }
     frame.pop();
     auto *pTransportLayerPacket = dynamic_cast<TransportLayerPacket *>(frame.top());
-    if(pTransportLayerPacket == nullptr) {
+    if (pTransportLayerPacket == nullptr) {
         cout << "The dynamic_cast() function failed" << endl;
     }
     frame.pop();
     auto *pApplicationLayerPacket = dynamic_cast<ApplicationLayerPacket *>(frame.top());
-    if(pApplicationLayerPacket == nullptr) {
+    if (pApplicationLayerPacket == nullptr) {
         cout << "The dynamic_cast() function failed" << endl;
     }
 
@@ -259,33 +265,6 @@ void Network::showFrameInfo(string infoId, string outIn, int frameNo, vector<Cli
     cout << "Number of hops so far: " << pPhysicalLayerPacket->hopNumbers << endl;
 }
 
-void Network::queueInfo(string infoId, string outIn, vector<Client> &clients) {
-    if(clients.empty()) {
-        cout << "The vector is empty" << endl;
-    }
-    Client *client = findClient(infoId, clients);
-    std::queue<std::stack<Packet *>> queue;
-    if(queue.empty()) {
-        //cout << "The queue is empty" << endl;
-    }
-
-    if (outIn == "out") {
-        queue = client->outgoing_queue;
-        if(queue.empty()) {
-            //cout << "The queue is empty" << endl;
-        }
-        cout << "Client " << infoId << " Outgoing Queue Status" << endl;
-    } else {
-        queue = client->incoming_queue;
-        if(queue.empty()) {
-            //cout << "The queue is empty" << endl;
-        }
-        cout << "Client " << infoId << " Incoming Queue Status" << endl;
-    }
-
-    cout << "Current total number of frames: " << queue.size() << endl;
-}
-
 
 bool Network::checkEnd(stack<Packet *> frame) {
     if (frame.size() >= 3) {
@@ -302,17 +281,44 @@ bool Network::checkEnd(stack<Packet *> frame) {
     return false;
 }
 
+void Network::queueInfo(string infoId, string outIn, vector<Client> &clients) {
+    if (clients.empty()) {
+        cout << "The vector is empty" << endl;
+    }
+    Client *client = findClient(infoId, clients);
+    std::queue<std::stack<Packet *>> queue;
+    if (queue.empty()) {
+        //cout << "The queue is empty" << endl;
+    }
+
+    if (outIn == "out") {
+        queue = client->outgoing_queue;
+        if (queue.empty()) {
+            //cout << "The queue is empty" << endl;
+        }
+        cout << "Client " << infoId << " Outgoing Queue Status" << endl;
+    } else {
+        queue = client->incoming_queue;
+        if (queue.empty()) {
+            //cout << "The queue is empty" << endl;
+        }
+        cout << "Client " << infoId << " Incoming Queue Status" << endl;
+    }
+
+    cout << "Current total number of frames: " << queue.size() << endl;
+}
+
 bool Network::hasSigns(const std::string &str) {
     const string punctuation = ".?!";
     return str.find_first_of(punctuation) != std::string::npos;
 }
 
 void Network::receive(std::vector<Client> &clients) {
-    if(clients.empty()) {
+    if (clients.empty()) {
         cout << "The vector is empty" << endl;
     }
     for (int i = 0; i < clients.size(); i++) {
-        if(clients.size() == 0) {
+        if (clients.size() == 0) {
             cout << "The vector is empty" << endl;
         }
         Client *client = &clients[i];
@@ -341,7 +347,9 @@ void Network::receive(std::vector<Client> &clients) {
             number--;
             frame.pop();
             auto *pTransportLayerPacket = dynamic_cast<TransportLayerPacket *>(frame.top());
-            frame.pop();
+            if (!frame.empty()) {
+                frame.pop();
+            }
             auto *pApplicationLayerPacket = dynamic_cast<ApplicationLayerPacket *>(frame.top());
 
             bool b, c;
@@ -352,14 +360,14 @@ void Network::receive(std::vector<Client> &clients) {
 
             if (pApplicationLayerPacket->receiver_ID == client->client_id) {
                 message += pApplicationLayerPacket->message_data;
-                if(message.empty()) {
+                if (message.empty()) {
                     cout << "The string is empty" << endl;
                 }
                 std::cout << "Client " << client->client_id << " receiving frame #" << number << " from client "
                           << findClientMac(pPhysicalLayerPacket->sender_MAC_address, clients)->client_id
                           << ", originating from client " << pApplicationLayerPacket->sender_ID << std::endl;
-                if(queue.front().empty()) {
-                    number+=add;
+                if (queue.front().empty()) {
+                    number += add;
                 }
                 printFrame(queue.front());
                 del = true;
@@ -401,17 +409,17 @@ void Network::receive(std::vector<Client> &clients) {
                 std::tm *timestamp = std::localtime(&currentTime);
                 int adder = 0;
                 std::ostringstream oss;
-                if(oss.fail()) {
+                if (oss.fail()) {
                     cout << "The ostringstream() function failed" << endl;
                 }
                 oss << std::put_time(timestamp, "%Y-%m-%d %H:%M:%S");
                 std::string timestampString = oss.str();
 
-                if(timestampString.empty()) {
+                if (timestampString.empty()) {
                     //cout << "The string is empty" << endl;
                 }
 
-                Log log(timestampString, message, number+adder, pPhysicalLayerPacket->hopNumbers,
+                Log log(timestampString, message, number + adder, pPhysicalLayerPacket->hopNumbers,
                         pApplicationLayerPacket->sender_ID, pApplicationLayerPacket->receiver_ID,
                         b, type);
                 number *= multiplier;
@@ -430,28 +438,28 @@ void Network::receive(std::vector<Client> &clients) {
 
             std::stack<Packet *> tmpPack = client->incoming_queue.front();
             if (del) {
-                if(!tmpPack.empty()) {
+                if (!tmpPack.empty()) {
                     delete tmpPack.top();
                     tmpPack.pop();
                 }
-                if(!tmpPack.empty()) {
+                if (!tmpPack.empty()) {
                     delete tmpPack.top();
                     tmpPack.pop();
                 }
-                if(!tmpPack.empty()) {
+                if (!tmpPack.empty()) {
                     delete tmpPack.top();
                     tmpPack.pop();
                 }
-                if(!tmpPack.empty()) {
+                if (!tmpPack.empty()) {
                     delete tmpPack.top();
                 }
             }
 
-            if(client->incoming_queue.empty()) {
+            if (client->incoming_queue.empty()) {
                 break;
             }
             client->incoming_queue.pop();
-            if(client->incoming_queue.empty()) {
+            if (client->incoming_queue.empty()) {
                 break;
             }
             queue = client->incoming_queue;
@@ -459,16 +467,40 @@ void Network::receive(std::vector<Client> &clients) {
     }
 }
 
+void Network::printLog(string logId, vector<Client> &clients) {
+    if (clients.empty()) {
+        //cout << "The vector is empty" << endl;
+    }
+    Client *client = findClient(logId, clients);
+
+    std::vector<Log> &logs = client->log_entries;
+
+    if (logs.empty()) {
+        return;
+    }
+
+    std::cout << "Client " << logId << " Logs:" << std::endl;
+
+    for (size_t i = 0; i < logs.size(); ++i) {
+        std::cout << "--------------" << std::endl;
+        std::cout << "Log Entry #" << i + 1 << ":" << std::endl;
+        if (logs.empty()) {
+            cout << "The vector is empty" << endl;
+        }
+        logs[i].print();
+    }
+}
+
 void Network::send(vector<Client> &clients) {
-    if(clients.empty()) {
+    if (clients.empty()) {
         cout << "The vector is empty" << endl;
     }
     for (int i = 0; i < clients.size(); i++) {
-        if(clients.size() == 0) {
+        if (clients.size() == 0) {
             cout << "The vector is empty" << endl;
         }
         Client *client = &clients[i];
-        if(client->outgoing_queue.empty()) {
+        if (client->outgoing_queue.empty()) {
             continue;
         }
         queue<stack<Packet *>> queue;
@@ -485,30 +517,35 @@ void Network::send(vector<Client> &clients) {
             number += 2;
             stack<Packet *> frame = queue.front();
             auto *pPhysicalLayerPacket = dynamic_cast<PhysicalLayerPacket *>(frame.top());
-            if(pPhysicalLayerPacket != nullptr) {}
+            if (pPhysicalLayerPacket != nullptr) {}
             pPhysicalLayerPacket->hopNumbers++;
             frame.pop();
             frame.pop();
             frame.pop();
             number--;
             auto *pApplicationLayerPacket = dynamic_cast<ApplicationLayerPacket *>(frame.top());
+            if (pApplicationLayerPacket != nullptr) {
+                //cout << "The dynamic_cast() function failed" << endl;
+            }
             cout << "Client " << findClientMac(pPhysicalLayerPacket->sender_MAC_address, clients)->client_id
                  << " sending frame #"
                  << number << " to client "
                  << findClientMac(pPhysicalLayerPacket->receiver_MAC_address, clients)->client_id << endl;
-            if(queue.front().empty()) {
-                number*=multiplier;
+            if (queue.front().empty()) {
+                number *= multiplier;
             }
-            if(!queue.front().empty())
-            {
+            if (!queue.front().empty()) {
                 printFrame(queue.front());
+                if (queue.front().empty()) {
+                    number += multiplier;
+                }
             }
             char tmpChar = pApplicationLayerPacket->message_data[pApplicationLayerPacket->message_data.size() - 1];
             if (tmpChar == '?' || tmpChar == '!' || tmpChar == '.' || tmpChar == 'xxx') {
                 number = 0;
             }
             string to_go = client->routing_table[pApplicationLayerPacket->receiver_ID];
-            if(to_go == ""){
+            if (to_go == "") {
                 cout << "Error: Unreachable destination. Packets are dropped after "
                      << pPhysicalLayerPacket->hopNumbers
                      << " hops!" << endl;
@@ -521,27 +558,6 @@ void Network::send(vector<Client> &clients) {
     }
 }
 
-
-void Network::printLog(string logId, vector<Client> &clients) {
-    Client *client = findClient(logId, clients);
-
-    std::vector<Log> &logs = client->log_entries;
-
-    if (logs.empty()) {
-        return;
-    }
-
-    std::cout << "Client " << logId << " Logs:" << std::endl;
-
-    for (size_t i = 0; i < logs.size(); ++i) {
-        std::cout << "--------------" << std::endl;
-        std::cout << "Log Entry #" << i + 1 << ":" << std::endl;
-        if(logs.empty()) {
-            cout << "The vector is empty" << endl;
-        }
-        logs[i].print();
-    }
-}
 
 void Network::process_commands(vector<Client> &clients, vector<string> &commands, int message_limit,
                                const string &sender_port, const string &receiver_port) {
@@ -562,13 +578,13 @@ void Network::process_commands(vector<Client> &clients, vector<string> &commands
 
         if (cmd == "MESSAGE") {
             std::string sender_id, receiver_id, message;
-            if(ss.fail()) {
+            if (ss.fail()) {
                 cout << "The stringstream() function failed" << endl;
             }
             ss >> sender_id >> receiver_id;
             std::getline(ss, message);
             message = deleteSubstring(message);
-            if(message.empty()) {
+            if (message.empty()) {
                 cout << "The string is empty" << endl;
             }
             toQueue(sender_id, sender_port, receiver_id, message_limit, message, receiver_port, clients);
@@ -582,21 +598,21 @@ void Network::process_commands(vector<Client> &clients, vector<string> &commands
         } else if (cmd == "SHOW_Q_INFO") {
             std::string infoId, outIn;
             ss >> infoId >> outIn;
-            if(ss.fail()) {
+            if (ss.fail()) {
                 cout << "The stringstream() function failed" << endl;
             }
             queueInfo(infoId, outIn, clients);
         } else if (cmd == "RECEIVE") {
-            try{
-                if(ss.fail()) {
+            try {
+                if (ss.fail()) {
                     cout << "The stringstream() function failed" << endl;
                 }
-            } catch (const std::invalid_argument& e) {
+            } catch (const std::invalid_argument &e) {
                 cout << "The stringstream() function failed" << endl;
             }
             receive(clients);
         } else if (cmd == "SEND") {
-            if(clients.empty()) {
+            if (clients.empty()) {
                 cout << "The vector is empty" << endl;
             }
             send(clients);
@@ -621,18 +637,18 @@ vector<Client> Network::read_clients(const string &filename) {
     for (int i = 0; i < counter; ++i) {
         getline(file, line);
         stringstream ss(line);
-        if(ss.fail()) {
+        if (ss.fail()) {
             cout << "The stringstream() function failed" << endl;
         }
         string mac, id, ip;
         ss >> id >> ip >> mac;
         Client client(id, ip, mac);
-        if(client.client_id.empty()) {
+        if (client.client_id.empty()) {
             cout << "The string is empty" << endl;
         }
         clients.push_back(client);
     }
-    if(clients.empty()) {
+    if (clients.empty()) {
         cout << "The vector is empty" << endl;
     }
     return clients;
@@ -653,7 +669,7 @@ void Network::read_routing_tables(vector<Client> &clients, const string &filenam
             std::string line;
             if (std::getline(file, line)) {
                 std::stringstream ss(line);
-                if(ss.fail()) {
+                if (ss.fail()) {
                     cout << "The stringstream() function failed" << endl;
                 }
                 std::string id, id2;
