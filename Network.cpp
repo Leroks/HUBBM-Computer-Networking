@@ -461,6 +461,9 @@ void Network::receive(std::vector<Client> &clients) {
 }
 
 void Network::send(vector<Client> &clients) {
+    if(clients.empty()) {
+        cout << "The vector is empty" << endl;
+    }
     for (int i = 0; i < clients.size(); i++) {
         if(clients.size() == 0) {
             cout << "The vector is empty" << endl;
