@@ -585,8 +585,18 @@ void Network::process_commands(vector<Client> &clients, vector<string> &commands
             }
             queueInfo(infoId, outIn, clients);
         } else if (cmd == "RECEIVE") {
+            try{
+                if(ss.fail()) {
+                    cout << "The stringstream() function failed" << endl;
+                }
+            } catch (const std::invalid_argument& e) {
+                cout << "The stringstream() function failed" << endl;
+            }
             receive(clients);
         } else if (cmd == "SEND") {
+            if(clients.empty()) {
+                cout << "The vector is empty" << endl;
+            }
             send(clients);
         } else if (cmd == "PRINT_LOG") {
             std::string logId;
