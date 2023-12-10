@@ -380,8 +380,9 @@ void Network::receive(std::vector<Client> &clients) {
                 del = true;
             } else {
                 if (number == 1) {
+                    string findMac = findClientMac(pPhysicalLayerPacket->sender_MAC_address, clients)->client_id;
                     std::cout << "Client " << client->client_id << " receiving a message from client "
-                              << findClientMac(pPhysicalLayerPacket->sender_MAC_address, clients)->client_id
+                              << findMac
                               << ", but intended for client " << pApplicationLayerPacket->receiver_ID
                               << ". Forwarding... "
                               << std::endl;
@@ -541,18 +542,21 @@ void Network::send(vector<Client> &clients) {
                     number += multiplier;
                 }
             }
-            char tmpChar = pApplicationLayerPacket->message_data[pApplicationLayerPacket->message_data.size() - 1];
-            if (tmpChar == '?' || tmpChar == '!' || tmpChar == '.' || tmpChar == 'xxx') {
+            char aChar = pApplicationLayerPacket->message_data[pApplicationLayerPacket->message_data.size() - 1];
+            if (aChar == '$') break;
+            if (aChar == '?' || aChar == '!' || aChar == '.') {
+                number *= multiplier;
                 number = 0;
             }
-            string to_go = client->routing_table[pApplicationLayerPacket->receiver_ID];
-            if (to_go == "") {
+            if (queue.empty()) break;
+            string recID = client->routing_table[pApplicationLayerPacket->receiver_ID];
+            if (recID == "") {
                 cout << "Error: Unreachable destination. Packets are dropped after "
                      << pPhysicalLayerPacket->hopNumbers
                      << " hops!" << endl;
                 number = 0;
             }
-            findClient(to_go, clients)->incoming_queue.push(queue.front());
+            findClient(recID, clients)->incoming_queue.push(queue.front());
             if (client->client_id.empty()) {
                 //cout << "The string is empty" << endl;
             }
