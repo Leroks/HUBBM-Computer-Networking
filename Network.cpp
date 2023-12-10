@@ -7,31 +7,6 @@ Network::Network() {
 
 }
 
-std::string Network::deleteSubstring(std::string str) {
-    //delete the last # and the last character
-    while (!str.empty()) {
-        if (str.back() == '#') break;
-        str.pop_back();
-    }
-    str.pop_back();
-    //delete the first #
-    auto it = str.begin();
-    while (it != str.end()) {
-        if (*it == '#') break;
-        ++it;
-    }
-    str.erase(str.begin(), it + 1);
-    return str;
-}
-
-int Network::findFrameSize(string message, int message_limit) {
-    int size;
-    size = message.size() / message_limit;
-    if (message.size() % message_limit != 0) {
-        size++;
-    }
-    return size;
-}
 
 Client *Network::findClient(string id, vector<Client> &clients) {
     for (auto &client: clients) {
@@ -58,6 +33,32 @@ string Network::find_MAC(string id, vector<Client> &clients) {
     } else {
         return "";
     }
+}
+
+std::string Network::deleteSubstring(std::string str) {
+    //delete the last # and the last character
+    while (!str.empty()) {
+        if (str.back() == '#') break;
+        str.pop_back();
+    }
+    str.pop_back();
+    //delete the first #
+    auto it = str.begin();
+    while (it != str.end()) {
+        if (*it == '#') break;
+        ++it;
+    }
+    str.erase(str.begin(), it + 1);
+    return str;
+}
+
+int Network::findFrameSize(string message, int message_limit) {
+    int size;
+    size = message.size() / message_limit;
+    if (message.size() % message_limit != 0) {
+        size++;
+    }
+    return size;
 }
 
 void Network::printFrame(stack<Packet *> frame) {
