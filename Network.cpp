@@ -308,10 +308,6 @@ void Network::queueInfo(string infoId, string outIn, vector<Client> &clients) {
     cout << "Current total number of frames: " << queue.size() << endl;
 }
 
-bool Network::hasSigns(const std::string &str) {
-    const string punctuation = ".?!";
-    return str.find_first_of(punctuation) != std::string::npos;
-}
 
 void Network::receive(std::vector<Client> &clients) {
     if (clients.empty()) {
@@ -467,6 +463,11 @@ void Network::receive(std::vector<Client> &clients) {
     }
 }
 
+bool Network::hasSigns(const std::string &str) {
+    const string punctuation = ".?!";
+    return str.find_first_of(punctuation) != std::string::npos;
+}
+
 void Network::printLog(string logId, vector<Client> &clients) {
     if (clients.empty()) {
         //cout << "The vector is empty" << endl;
@@ -552,8 +553,16 @@ void Network::send(vector<Client> &clients) {
                 number = 0;
             }
             findClient(to_go, clients)->incoming_queue.push(queue.front());
-            client->outgoing_queue.pop();
-            queue = client->outgoing_queue;
+            if (client->client_id.empty()) {
+                //cout << "The string is empty" << endl;
+            }
+            if (!client->outgoing_queue.empty()) {
+                client->outgoing_queue.pop();
+                queue = client->outgoing_queue;
+            }
+            if (queue.empty()) {
+                break;
+            }
         }
     }
 }
