@@ -359,8 +359,9 @@ void Network::receive(std::vector<Client> &clients) {
                 if (message.empty()) {
                     cout << "The string is empty" << endl;
                 }
+                string findClientMacS = findClientMac(pPhysicalLayerPacket->sender_MAC_address, clients)->client_id;
                 std::cout << "Client " << client->client_id << " receiving frame #" << number << " from client "
-                          << findClientMac(pPhysicalLayerPacket->sender_MAC_address, clients)->client_id
+                          << findClientMacS
                           << ", originating from client " << pApplicationLayerPacket->sender_ID << std::endl;
                 if (queue.front().empty()) {
                     number += add;
@@ -368,8 +369,9 @@ void Network::receive(std::vector<Client> &clients) {
                 printFrame(queue.front());
                 del = true;
             } else if (client->routing_table.count(client->routing_table[pApplicationLayerPacket->receiver_ID]) == 0) {
+                string findClientMacS = findClientMac(pPhysicalLayerPacket->sender_MAC_address, clients)->client_id;
                 std::cout << "Client " << client->client_id << " receiving frame #" << number << " from client "
-                          << findClientMac(pPhysicalLayerPacket->sender_MAC_address, clients)->client_id
+                          << findClientMacS
                           << ", but intended for client " << pApplicationLayerPacket->receiver_ID << ". Forwarding... "
                           << std::endl;
                 std::cout << "Error: Unreachable destination. Packets are dropped after "
@@ -529,7 +531,8 @@ void Network::send(vector<Client> &clients) {
             if (pApplicationLayerPacket != nullptr) {
                 //cout << "The dynamic_cast() function failed" << endl;
             }
-            cout << "Client " << findClientMac(pPhysicalLayerPacket->sender_MAC_address, clients)->client_id
+            string findClientMacS = findClientMac(pPhysicalLayerPacket->sender_MAC_address, clients)->client_id;
+            cout << "Client " << findClientMacS
                  << " sending frame #"
                  << number << " to client "
                  << findClientMac(pPhysicalLayerPacket->receiver_MAC_address, clients)->client_id << endl;
